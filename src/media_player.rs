@@ -20,6 +20,7 @@ impl MediaPlayer {
     pub fn new(instance: &Instance) -> Option<MediaPlayer> {
         unsafe{
             let p = ffi::libvlc_media_player_new(instance.ptr);
+            ffi::libvlc_set_fullscreen(p, 1);
 
             if p.is_null() {
                 return None;
@@ -98,7 +99,7 @@ impl MediaPlayer {
         let flag_resume = resume.is_some();
         let flag_flush = flush.is_some();
         let flag_drain = drain.is_some();
-        
+
         let data = AudioCallbacksData {
             play: Box::new(play), pause: pause, resume: resume,
             flush: flush, drain: drain,
@@ -117,12 +118,12 @@ impl MediaPlayer {
         }
     }
 
-    /// Set the NSView handler where the media player should render its video output. 
+    /// Set the NSView handler where the media player should render its video output.
     pub fn set_nsobject(&self, drawable: *mut c_void) {
         unsafe{ ffi::libvlc_media_player_set_nsobject(self.ptr, drawable) };
     }
 
-    /// Get the NSView handler previously set with set_nsobject(). 
+    /// Get the NSView handler previously set with set_nsobject().
     pub fn get_nsobject(&self) -> Option<*mut c_void> {
         let nso = unsafe{ ffi::libvlc_media_player_get_nsobject(self.ptr) };
         if nso.is_null() { None }else{ Some(nso) }
@@ -133,7 +134,7 @@ impl MediaPlayer {
         unsafe{ ffi::libvlc_media_player_set_xwindow(self.ptr, drawable) };
     }
 
-    /// Get the X Window System window identifier previously set with set_xwindow(). 
+    /// Get the X Window System window identifier previously set with set_xwindow().
     pub fn get_xwindow(&self) -> Option<u32> {
         let id = unsafe{ ffi::libvlc_media_player_get_xwindow(self.ptr) };
         if id == 0 { None }else{ Some(id) }
@@ -332,7 +333,7 @@ unsafe extern "C" fn audio_cb_play(
     data: *mut c_void, samples: *const c_void, count: c_uint, pts: i64) {
     let data: &AudioCallbacksData = transmute(data as *mut AudioCallbacksData);
     (data.play)(samples, count, pts);
-    
+
 }
 
 unsafe extern "C" fn audio_cb_pause(data: *mut c_void, pts: i64) {
@@ -360,4 +361,3 @@ pub struct TrackDescription {
     pub id: i32,
     pub name: Option<String>,
 }
-
